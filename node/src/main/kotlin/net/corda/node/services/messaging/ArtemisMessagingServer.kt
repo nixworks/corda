@@ -69,9 +69,10 @@ import javax.security.auth.spi.LoginModule
 @ThreadSafe
 class ArtemisMessagingServer(private val config: NodeConfiguration,
                              private val messagingServerAddress: NetworkHostAndPort,
-                             val maxMessageSize: Int) : ArtemisBroker, SingletonSerializeAsToken() {
+                             private val maxMessageSize: Int) : ArtemisBroker, SingletonSerializeAsToken() {
     companion object {
         private val log = contextLogger()
+        private const val JOURNAL_HEADER_SIZE = 400
     }
 
     private class InnerState {
@@ -139,7 +140,7 @@ class ArtemisMessagingServer(private val config: NodeConfiguration,
         isPopulateValidatedUser = true
         journalBufferSize_NIO = maxMessageSize // Artemis default is 490KiB - required to address IllegalArgumentException (when Artemis uses Java NIO): Record is too large to store.
         journalBufferSize_AIO = maxMessageSize // Required to address IllegalArgumentException (when Artemis uses Linux Async IO): Record is too large to store.
-        journalFileSize = maxMessageSize // The size of each journal file in bytes. Artemis default is 10MiB.
+        journalFileSize = maxMessageSize + JOURNAL_HEADER_SIZE// The size of each journal file in bytes. Artemis default is 10MiB.
         managementNotificationAddress = SimpleString(NOTIFICATIONS_ADDRESS)
 
         // JMX enablement
